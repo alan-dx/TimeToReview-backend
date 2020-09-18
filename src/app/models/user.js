@@ -27,6 +27,10 @@ const UserSchema = new mongoose.Schema({
     reviews: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Review'
+    }],
+    subjects: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Subject'
     }]
 
 })

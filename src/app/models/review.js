@@ -32,12 +32,9 @@ const ReviewSchema = mongoose.Schema({
         type: String,
         required: true
     },
-    subject: {
-        type: Object,
-        required: true
-    },
     subject_id: {
-        type: String,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Subject",
         required: true
     },
     cretedAt: {

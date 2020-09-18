@@ -11,5 +11,9 @@ routes
     .delete('/deleteReview', appController.deleteReview)
     .put('/editReview', appController.editReview)
     .get('/indexReviews', appController.indexReview)
+    .get('/listUser', appController.listUser)
+    .delete('/deleteUser', appController.deleteUser)
+    .post('/createSubject', appController.createSubject)
+    .get('/indexSubjects', appController.indexSubjects)
 
 module.exports = routes;
