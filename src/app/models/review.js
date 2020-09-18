@@ -24,12 +24,9 @@ const ReviewSchema = mongoose.Schema({
         type: Date,
         required: true
     },
-    routine: {
-        type: Object,
-        required: true
-    },
     routine_id: {
-        type: String,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Routine',
         required: true
     },
     subject_id: {

@@ -1,4 +1,5 @@
 const Review = require("../models/review");
+const Routine = require("../models/routine");
 const Subject = require("../models/subject");
 const User = require("../models/user");
 
@@ -12,7 +13,7 @@ module.exports = {
         return res.status(200).json({ message: "User deleted"})
     },
     async listUser(req,res) {
-        const user = await User.findById(req.userId).populate("subjects")
+        const user = await User.findById(req.userId)
 
         return res.status(200).json({user: user})
     },
@@ -20,10 +21,12 @@ module.exports = {
         try {
             const Reviews = await User.findById(req.userId).populate({
                 path: "reviews",//populate in User model
-                populate: { //deep populate in reviews to populate subject_id
-                    path: 'subject_id',
-                }
+                populate: [ //deep populate in reviews to populate subject_id
+                    {path: 'subject_id'},
+                    {path: 'routine_id'},
+                ],
             })//If you want to see password or email, put the .select("+passowrd or +email") method
+
             return res.status(200).json(Reviews.reviews)
         } catch (error) {
             return res.status(500).json({error: `Error on delete Review, ${error}`})
@@ -32,10 +35,10 @@ module.exports = {
     },
     async createReview(req,res) {
 
-        const { title, date, hour, fullDateTime, routine, routine_id, subject_id } = req.body;
+        const { title, date, hour, fullDateTime, routine_id, subject_id } = req.body;
         const user = await User.findById(req.userId)
-        const subject = await Subject.findById(subject_id)
-
+        const subject = await Subject.findById(subject_id)//TROCAR, FAZENDO A PESQUISA NO USÁRIO PARA FACILITAR A QUERY
+        const routine = await Routine.findById(routine_id)
         try {
 
             const review = await Review.create({
@@ -44,14 +47,15 @@ module.exports = {
                 date,
                 hour,
                 fullDateTime,
-                routine,
                 routine_id,
                 subject_id
             })
             subject.associatedReviews.push(review)
+            routine.associatedReviews.push(review)
             user.reviews.push(review)
 
             subject.save()
+            routine.save()
             user.save()
 
             return res.status(200).json({ user })
@@ -141,6 +145,66 @@ module.exports = {
             return res.status(500).json({ error: `Error on create subject, ${error}`})
         }
 
+    },
+    async editSubject(req,res) {
+        const { title, marker, info } = req.body
+        const subject = await Subject.findById(req.query.id)//TENTAR FAZER A BUSCA NO MODEL USER
+        try {
+            subject.label = title
+            subject.value = title
+            subject.marker = marker,
+            subject.info = info
+
+            subject.save()
+
+            return res.status(200).json({message: `Edit subject sucessfuly`})
+
+        } catch (error) {
+            return res.status(500).json({error: `Error on edit subject, ${error}`})
+        }
+    },
+    async indexRoutines(req,res) {
+        try {
+            const Routines = await User.findById(req.userId).populate('routines')
+    
+            return res.status(200).json(Routines.routines)
+        } catch (error) {
+            return res.status(500).json({error: `Error on index routines, ${error}`})
+        }
+
+    },
+    async createRoutine(req,res) {
+        const { sequence } = req.body;
+        const user = await User.findById(req.userId)
+
+        try {
+
+            const routine = await Routine.create({
+                sequence,
+                user: req.userId
+            })
+
+            user.routines.push(routine)
+            user.save()
+
+            return res.status(200).json({ routine })
+
+        } catch (error) {
+            return res.status(500).json({error: `Error on create routine, ${error}`})            
+        }
+    },
+    async editRoutine(req,res) {
+        const { sequence } = req.body
+        const routine = await Routine.findById(req.query.id)//TENTAR FAZER A BUSCA NO MODEL USER
+        try {
+            routine.sequence = sequence
+            console.log(routine)
+            routine.save()
+
+            return res.status(200).json({message: `Edit routine sucessfuly`})
+        } catch (error) {
+            return res.status(500).json({error: `Error on edit routine, ${error}`})
+        }
     }
 }
 

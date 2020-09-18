@@ -15,5 +15,9 @@ routes
     .delete('/deleteUser', appController.deleteUser)
     .post('/createSubject', appController.createSubject)
     .get('/indexSubjects', appController.indexSubjects)
+    .put('/editSubject', appController.editSubject)
+    .post('/createRoutine', appController.createRoutine)
+    .get('/indexRoutines', appController.indexRoutines)
+    .put('/editRoutine', appController.editRoutine)
 
 module.exports = routes;

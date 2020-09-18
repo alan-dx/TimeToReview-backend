@@ -1,5 +1,5 @@
 const mongoose = require('../../database/index');
-const bcrypt = require('bcryptjs');
+// const bcrypt = require('bcryptjs');
 
 mongoose.set('useFindAndModify', false);
 
@@ -31,6 +31,10 @@ const UserSchema = new mongoose.Schema({
     subjects: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Subject'
+    }],
+    routines: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Routine'
     }]
 
 })

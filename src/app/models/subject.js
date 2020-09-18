@@ -26,7 +26,11 @@ const SubjectSchema = mongoose.Schema({
     associatedReviews: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "Review"
-    }]
+    }],
+    createdAt: {
+        type: Date,
+        default: Date.now
+    }
 })
 
 const Subject = mongoose.model('Subject', SubjectSchema)
