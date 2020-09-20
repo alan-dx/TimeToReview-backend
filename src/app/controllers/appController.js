@@ -4,6 +4,11 @@ const Subject = require("../models/subject");
 const User = require("../models/user");
 
 module.exports = {
+
+    //currentIndexReview será igual a indexReviews, porém ira retornar apenas as revisões onde
+    //a data for igual a data do dia atual. Essa rota será requisitada pelo app quando o horário
+    //de revisões estabelcido chegar
+
     async verifyToken(req,res) {
         return res.status(200).json({message: "Verifing token"})
     },
@@ -35,10 +40,11 @@ module.exports = {
     },
     async createReview(req,res) {
 
-        const { title, date, hour, fullDateTime, routine_id, subject_id } = req.body;
+        const { title, date, hour, fullDateTime, routine_id, subject_id, dateNextSequenceReview } = req.body;
         const user = await User.findById(req.userId)
-        const subject = await Subject.findById(subject_id)//TROCAR, FAZENDO A PESQUISA NO USÁRIO PARA FACILITAR A QUERY
+        const subject = await Subject.findById(subject_id)//TROCAR, FAZENDO A PESQUISA NO USER MODEL PARA FACILITAR A QUERY
         const routine = await Routine.findById(routine_id)
+
         try {
 
             const review = await Review.create({
@@ -48,16 +54,18 @@ module.exports = {
                 hour,
                 fullDateTime,
                 routine_id,
-                subject_id
+                subject_id,
+                dateNextSequenceReview
             })
+
             subject.associatedReviews.push(review)
             routine.associatedReviews.push(review)
             user.reviews.push(review)
-
+            
             subject.save()
             routine.save()
             user.save()
-
+            
             return res.status(200).json({ user })
         } catch (error) {
             return res.status(500).json({ error: `Error on create review, ${error}`})
@@ -68,6 +76,7 @@ module.exports = {
         const user = await User.findById(req.userId)
         const review = await Review.findById(req.query.id)
         const subject = await Subject.findById(review.subject_id)
+        const routine = await Routine.findById(review.routine_id)
 
         try {
             if (review.user == req.userId) {//Security
@@ -76,11 +85,14 @@ module.exports = {
     
                 const newReviews = user.reviews.filter(item => item._id != req.query.id)
                 const newSubjects = subject.associatedReviews.filter(item => item._id != req.query.id)
+                const newRoutines = routine.associatedReviews.filter(item => item._id != req.query.id) 
                 user.reviews = newReviews
                 subject.associatedReviews = newSubjects
+                routine.associatedReviews = newRoutines
 
                 subject.save()
                 user.save()
+                routine.save()
     
                 return res.status(200).json({message: "Delete review sucessfuly", user})
             } else {
@@ -89,6 +101,39 @@ module.exports = {
         } catch (error) {
             return res.status(500).json({error: `Error on delete review, ${error}`})
         }
+    },
+    async concludeReview(req,res) {
+
+        try {
+            const review = await Review.findById(req.query.id).populate('routine_id')
+
+            console.log(review.currentSequenceReview)
+            
+            if (review.currentSequenceReview < review.routine_id.sequence.length - 1) {
+
+                const nextDate = review.createdAt.getDate() + Number(review.routine_id.sequence[review.currentSequenceReview + 1])
+
+                ++review.currentSequenceReview
+                review.dateNextSequenceReview = review.createdAt.setDate(nextDate)
+             
+                review.save()
+                
+                return res.status(200).json(review)
+            } else {
+
+                const nextDate = review.dateNextSequenceReview.getDate() + Number(review.routine_id.sequence[review.currentSequenceReview])
+
+                review.dateNextSequenceReview = new Date(review.dateNextSequenceReview.getFullYear(), review.dateNextSequenceReview.getMonth(), nextDate)//review.dateNextSequenceReview.setDate(nextDate) doesn't worked for some reason
+
+                review.save()
+
+                return res.status(200).json(review)
+            }
+
+        } catch (error) {
+            return res.status(500).json({error: `Error on conclude review, ${error}`})
+        }
+
     },
     async editReview(req,res) {
         try {
@@ -179,8 +224,10 @@ module.exports = {
 
         try {
 
+            sequenceArray = sequence.split('-')
+
             const routine = await Routine.create({
-                sequence,
+                sequence: sequenceArray,
                 user: req.userId
             })
 
@@ -204,6 +251,15 @@ module.exports = {
             return res.status(200).json({message: `Edit routine sucessfuly`})
         } catch (error) {
             return res.status(500).json({error: `Error on edit routine, ${error}`})
+        }
+    },
+    async deleteRoutine(req,res) {
+        try {
+            await Routine.findByIdAndDelete(req.query.id)
+
+            res.status(200).json({message: `Delete routine sucessfuly`})
+        } catch (error) {
+            res.status(500).json({error: `Error on delete routine, ${error}`})
         }
     }
 }

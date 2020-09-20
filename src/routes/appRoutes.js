@@ -10,6 +10,7 @@ routes
     .post('/createReview', appController.createReview)
     .delete('/deleteReview', appController.deleteReview)
     .put('/editReview', appController.editReview)
+    .post('/concludeReview', appController.concludeReview)
     .get('/indexReviews', appController.indexReview)
     .get('/listUser', appController.listUser)
     .delete('/deleteUser', appController.deleteUser)
@@ -19,5 +20,6 @@ routes
     .post('/createRoutine', appController.createRoutine)
     .get('/indexRoutines', appController.indexRoutines)
     .put('/editRoutine', appController.editRoutine)
+    .delete('/deleteRoutine', appController.deleteRoutine)
 
 module.exports = routes;

@@ -4,7 +4,7 @@ mongoose.set('useFindAndModify', false)
 
 const RoutineSchema = mongoose.Schema({
     sequence: {
-        type: String,
+        type: Array(String),
         required: true,
     },
     user: {
