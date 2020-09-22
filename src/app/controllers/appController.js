@@ -107,14 +107,16 @@ module.exports = {
         try {
             const review = await Review.findById(req.query.id).populate('routine_id')
 
-            console.log(review.currentSequenceReview)
-            
+            if (review.currentSequenceReview > (review.routine_id.sequence.length - 1)) {
+                review.currentSequenceReview = review.routine_id.sequence.length - 1
+            }
+
             if (review.currentSequenceReview < review.routine_id.sequence.length - 1) {
 
-                const nextDate = review.createdAt.getDate() + Number(review.routine_id.sequence[review.currentSequenceReview + 1])
+                const nextDate = review.dateNextSequenceReview.getDate() + Number(review.routine_id.sequence[review.currentSequenceReview + 1])
 
                 ++review.currentSequenceReview
-                review.dateNextSequenceReview = review.createdAt.setDate(nextDate)
+                review.dateNextSequenceReview = new Date(review.dateNextSequenceReview.getFullYear(), review.dateNextSequenceReview.getMonth(), nextDate)//review.dateNextSequenceReview.setDate(nextDate) doesn't worked for some reason
              
                 review.save()
                 
@@ -137,17 +139,62 @@ module.exports = {
     },
     async editReview(req,res) {
         try {
-
             const review = await Review.findOne({ _id: req.query.id})
-            
-            review.title = req.body.title || "Not defined"
-            review.date = req.body.date || "Not defined"
-            review.hour = req.body.hour || "Not defined"
-            review.fullDateTime = req.body.fullDateTime || 1598051730000
-            review.routine = req.body.routine || "Not defined"
-            review.routine_id = req.body.routine_id || "Not defined"
-            review.subject = req.body.subject || "Not defined"
-            review.subject_id = req.body.subject_id || "Not defined"
+            review.title = req.body.title || "Not define"
+
+            if (req.body.routine_id) {
+                console.log('rotina')
+                const routine = await Routine.findById(req.body.routine_id)
+                const oldRoutine = await Routine.findById(review.routine_id)
+
+                if (review.currentSequenceReview > (routine.sequence.length - 1)) {
+                    review.currentSequenceReview = routine.sequence.length - 1
+                }
+
+                const newRoutines = oldRoutine.associatedReviews.filter(item => {
+                    return JSON.stringify(item) != JSON.stringify(review._id)
+                })
+
+                oldRoutine.associatedReviews = newRoutines
+
+                if (routine.associatedReviews.indexOf(review._id) === -1) {
+                    routine.associatedReviews.push(review)//FAZ O FILRO P N POR REPETIDO
+                }
+
+                review.routine_id = req.body.routine_id
+                routine.save()
+                oldRoutine.save()
+
+            }
+
+            if (req.body.subject_id) {
+                console.log('subject')
+                const subject = await Subject.findById(req.body.subject_id)
+                const oldSubject = await Subject.findById(review.subject_id)
+
+                const newSubject = oldSubject.associatedReviews.filter(item => {
+                    return JSON.stringify(item) != JSON.stringify(review._id)
+                    //VERIFICAR POSTERIORMENTE SE SALVOU COMO STRING DENTRO DO ASSOCIATED,
+                    //POIS DEVE SER SALVO COMO OBJETO
+                }) 
+                oldSubject.associatedReviews = newSubject
+
+                if (subject.associatedReviews.indexOf(review._id) === -1) {
+                    subject.associatedReviews.push(review)
+                }
+
+                review.subject_id = req.body.subject_id
+                subject.save()
+                oldSubject.save()
+
+            }
+            // review.date = req.body.date || "Not defined"
+            // review.hour = req.body.hour || "Not defined"
+            // review.fullDateTime = req.body.fullDateTime || 1598051730000
+            // review.routine = req.body.routine || "Not defined"
+            // review.routine_id = req.body.routine_id || "Not defined"
+            // review.subject = req.body.subject || "Not defined"
+            // review.subject_id = req.body.subject_id || "Not defined"
             
             review.save()
 
@@ -241,11 +288,18 @@ module.exports = {
         }
     },
     async editRoutine(req,res) {
+
+        //SE FOR MANTIDO OU AUMENTAR TAMANHO DA SEQUÊNICA NÃO HÁ PROBLEMA
+        //SE DIMINUIR NA EDIÇÃO DA ROTINA O TAMANHO DA SEQUÊNCIA (2-4-5 => 2-4) IRÁ QUEBRAR A APLICAÇÃO
+        //OPÇÕES => PERMITIR APENAS O AUMENTO DA SEQUÊNCIA/MUDANÇA DAS DATAS DE SEQUÊNCIA
         const { sequence } = req.body
         const routine = await Routine.findById(req.query.id)//TENTAR FAZER A BUSCA NO MODEL USER
+
         try {
-            routine.sequence = sequence
-            console.log(routine)
+
+            sequenceArray = sequence.split('-')
+
+            routine.sequence = sequenceArray
             routine.save()
 
             return res.status(200).json({message: `Edit routine sucessfuly`})
