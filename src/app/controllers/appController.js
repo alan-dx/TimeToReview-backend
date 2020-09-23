@@ -81,7 +81,7 @@ module.exports = {
         try {
             if (review.user == req.userId) {//Security
 
-                await Review.findByIdAndDelete(req.query.id)
+                await Review.findByIdAndDelete(req.query.id)//Fazer apenas uma requisição, remover a que esta acima
     
                 const newReviews = user.reviews.filter(item => item._id != req.query.id)
                 const newSubjects = subject.associatedReviews.filter(item => item._id != req.query.id)
@@ -96,7 +96,7 @@ module.exports = {
     
                 return res.status(200).json({message: "Delete review sucessfuly", user})
             } else {
-                return res.status(500).json({error: "You are not the owner of this review!"})
+                return res.status(401).json({error: "NTO"})
             }
         } catch (error) {
             return res.status(500).json({error: `Error on delete review, ${error}`})
@@ -255,6 +255,27 @@ module.exports = {
             return res.status(500).json({error: `Error on edit subject, ${error}`})
         }
     },
+    async deleteSubject(req,res) {
+        const user = await User.findById(req.userId)
+        const subject = await Subject.findById(req.query.id)
+        try {
+            console.log(subject.user == req.userId, subject.associatedReviews.length)
+            if ((subject.user == req.userId) && (subject.associatedReviews.length == 0)) {
+                subject.deleteOne()
+
+                const newSubjects = user.subjects.filter(item => item._id != req.query.id)
+                user.subjects = newSubjects
+
+                user.save()
+
+                return res.status(200).json({message: "Delete subject sucessfuly"})
+            } else {
+                return res.status(401).json({error: "NTO"})
+            }
+        } catch (error) {
+            return res.status(500).json({error: `Error on delete subject, ${error}`})
+        }
+    },
     async indexRoutines(req,res) {
         try {
             const Routines = await User.findById(req.userId).populate('routines')
@@ -289,9 +310,6 @@ module.exports = {
     },
     async editRoutine(req,res) {
 
-        //SE FOR MANTIDO OU AUMENTAR TAMANHO DA SEQUÊNICA NÃO HÁ PROBLEMA
-        //SE DIMINUIR NA EDIÇÃO DA ROTINA O TAMANHO DA SEQUÊNCIA (2-4-5 => 2-4) IRÁ QUEBRAR A APLICAÇÃO
-        //OPÇÕES => PERMITIR APENAS O AUMENTO DA SEQUÊNCIA/MUDANÇA DAS DATAS DE SEQUÊNCIA
         const { sequence } = req.body
         const routine = await Routine.findById(req.query.id)//TENTAR FAZER A BUSCA NO MODEL USER
 
@@ -308,12 +326,23 @@ module.exports = {
         }
     },
     async deleteRoutine(req,res) {
+        const user = await User.findById(req.userId)
+        const routine = await Routine.findById(req.query.id)
         try {
-            await Routine.findByIdAndDelete(req.query.id)
+            if ((routine.user == req.userId) && (routine.associatedReviews.length == 0)) {
+                routine.deleteOne()
 
-            res.status(200).json({message: `Delete routine sucessfuly`})
+                const newSubjects = user.routines.filter(item => item._id != req.query.id)
+                user.routines = newSubjects
+
+                user.save()
+
+                return res.status(200).json({message: "Delete routine sucessfuly"})
+            } else {
+                return res.status(401).json({error: "NTO"})
+            }
         } catch (error) {
-            res.status(500).json({error: `Error on delete routine, ${error}`})
+            return res.status(500).json({error: `Error on delete routine, ${error}`})
         }
     }
 }

@@ -17,6 +17,7 @@ routes
     .post('/createSubject', appController.createSubject)
     .get('/indexSubjects', appController.indexSubjects)
     .put('/editSubject', appController.editSubject)
+    .delete('/deleteSubject', appController.deleteSubject)
     .post('/createRoutine', appController.createRoutine)
     .get('/indexRoutines', appController.indexRoutines)
     .put('/editRoutine', appController.editRoutine)
