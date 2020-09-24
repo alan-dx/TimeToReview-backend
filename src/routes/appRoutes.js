@@ -12,6 +12,7 @@ routes
     .put('/editReview', appController.editReview)
     .post('/concludeReview', appController.concludeReview)
     .get('/indexReviews', appController.indexReview)
+    .get('/indexAllReviews', appController.indexAllReviews)
     .get('/listUser', appController.listUser)
     .delete('/deleteUser', appController.deleteUser)
     .post('/createSubject', appController.createSubject)

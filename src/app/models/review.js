@@ -12,11 +12,7 @@ const ReviewSchema = mongoose.Schema({
         ref: 'User',
         required: true
     },
-    date: {
-        type: String,
-        required: true
-    },
-    hour: {
+    timer: {
         type: String,
         required: true
     },

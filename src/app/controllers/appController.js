@@ -31,16 +31,36 @@ module.exports = {
                     {path: 'routine_id'},
                 ],
             })//If you want to see password or email, put the .select("+passowrd or +email") method
+            const currentDate = new Date()
+            const indexReviews = Reviews.reviews.filter( item => {
+                console.log(item.dateNextSequenceReview.getDate() == currentDate.getDate())
+                return item.dateNextSequenceReview.getDate() == currentDate.getDate()
+            })
 
-            return res.status(200).json(Reviews.reviews)
+            return res.status(200).json(indexReviews)//Verificar a vulnerabilidade
         } catch (error) {
-            return res.status(500).json({error: `Error on delete Review, ${error}`})
+            return res.status(500).json({error: `Error on index Review, ${error}`})
         }
 
     },
+    async indexAllReviews(req,res) {
+        try {
+            const Reviews = await User.findById(req.userId).populate({
+                path: "reviews",//populate in User model
+                populate: [ //deep populate in reviews to populate subject_id
+                    {path: 'subject_id'},
+                    {path: 'routine_id'},
+                ],
+            })//If you want to see password or email, put the .select("+passowrd or +email") method
+
+            return res.status(200).json(Reviews.reviews)//Verificar a vulnerabilidade
+        } catch (error) {
+            
+        }
+    },
     async createReview(req,res) {
 
-        const { title, date, hour, fullDateTime, routine_id, subject_id, dateNextSequenceReview } = req.body;
+        const { title, timer, fullDateTime, routine_id, subject_id, dateNextSequenceReview } = req.body;
         const user = await User.findById(req.userId)
         const subject = await Subject.findById(subject_id)//TROCAR, FAZENDO A PESQUISA NO USER MODEL PARA FACILITAR A QUERY
         const routine = await Routine.findById(routine_id)
@@ -50,8 +70,7 @@ module.exports = {
             const review = await Review.create({
                 title,
                 user: req.userId,
-                date,
-                hour,
+                timer,
                 fullDateTime,
                 routine_id,
                 subject_id,
