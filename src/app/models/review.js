@@ -16,10 +16,6 @@ const ReviewSchema = mongoose.Schema({
         type: String,
         required: true
     },
-    fullDateTime: {
-        type: Date,
-        required: true
-    },
     routine_id: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Routine',

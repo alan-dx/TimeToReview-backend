@@ -12,6 +12,12 @@ const RoutineSchema = mongoose.Schema({
         ref: 'User',
         required: true
     },
+    label: {
+        type: String
+    },
+    value: {
+        type: String
+    },
     associatedReviews: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Review'

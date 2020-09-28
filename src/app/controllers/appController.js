@@ -5,10 +5,6 @@ const User = require("../models/user");
 
 module.exports = {
 
-    //currentIndexReview será igual a indexReviews, porém ira retornar apenas as revisões onde
-    //a data for igual a data do dia atual. Essa rota será requisitada pelo app quando o horário
-    //de revisões estabelcido chegar
-
     async verifyToken(req,res) {
         return res.status(200).json({message: "Verifing token"})
     },
@@ -18,9 +14,9 @@ module.exports = {
         return res.status(200).json({ message: "User deleted"})
     },
     async listUser(req,res) {
-        const user = await User.findById(req.userId)
+        const user = await User.findById(req.userId).populate(['subjects', 'routines'])
 
-        return res.status(200).json({user: user})
+        return res.status(200).json(user)
     },
     async indexReview(req,res) {
         try {
@@ -32,9 +28,11 @@ module.exports = {
                 ],
             })//If you want to see password or email, put the .select("+passowrd or +email") method
             const currentDate = new Date()
+            currentDate.setHours(0,0,0,0)
+            //LISTAR AS QUE ESTÃO ATRASADAS TB
             const indexReviews = Reviews.reviews.filter( item => {
-                console.log(item.dateNextSequenceReview.getDate() == currentDate.getDate())
-                return item.dateNextSequenceReview.getDate() == currentDate.getDate()
+                item.dateNextSequenceReview.setHours(0,0,0,0)
+                return item.dateNextSequenceReview <= currentDate
             })
 
             return res.status(200).json(indexReviews)//Verificar a vulnerabilidade
@@ -60,7 +58,7 @@ module.exports = {
     },
     async createReview(req,res) {
 
-        const { title, timer, fullDateTime, routine_id, subject_id, dateNextSequenceReview } = req.body;
+        const { title, timer, routine_id, subject_id, dateNextSequenceReview } = req.body;
         const user = await User.findById(req.userId)
         const subject = await Subject.findById(subject_id)//TROCAR, FAZENDO A PESQUISA NO USER MODEL PARA FACILITAR A QUERY
         const routine = await Routine.findById(routine_id)
@@ -71,7 +69,6 @@ module.exports = {
                 title,
                 user: req.userId,
                 timer,
-                fullDateTime,
                 routine_id,
                 subject_id,
                 dateNextSequenceReview
@@ -127,6 +124,7 @@ module.exports = {
             const review = await Review.findById(req.query.id).populate('routine_id')
 
             if (review.currentSequenceReview > (review.routine_id.sequence.length - 1)) {
+                //OLHAR SE OCORRER ALGUM BUG
                 review.currentSequenceReview = review.routine_id.sequence.length - 1
             }
 
@@ -159,7 +157,14 @@ module.exports = {
     async editReview(req,res) {
         try {
             const review = await Review.findOne({ _id: req.query.id})
-            review.title = req.body.title || "Not define"
+
+            if (req.body.title) {
+                review.title = req.body.title
+            }
+
+            if (req.body.timer) {
+                review.timer = req.body.timer || "Not define"
+            }
 
             if (req.body.routine_id) {
                 console.log('rotina')
@@ -315,7 +320,9 @@ module.exports = {
 
             const routine = await Routine.create({
                 sequence: sequenceArray,
-                user: req.userId
+                user: req.userId,
+                label: sequence,
+                value: sequence
             })
 
             user.routines.push(routine)
