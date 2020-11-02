@@ -5,7 +5,7 @@ const authConfig = require('../config/auth.json')
 
 function generateToken(params = {}) {
     return jwt.sign(params, authConfig.secret, {
-        expiresIn: 43200
+        expiresIn: 3600
     });
 }
 
@@ -29,7 +29,7 @@ module.exports = {
             const user = await User.create({//select:false don't work here beacause is not a query method. Then user.atributte = undefinde is necessary
                 name,
                 password: hashedPasword,
-                email
+                email,
             })
 
             user.password = undefined

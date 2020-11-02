@@ -28,6 +28,9 @@ const UserSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Review'
     }],
+    filterReviews: {
+        type: Array,
+    },
     subjects: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Subject'
@@ -35,7 +38,40 @@ const UserSchema = new mongoose.Schema({
     routines: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Routine'
-    }]
+    }],
+    performance: {
+        type: Array,
+        default: [
+            {
+                reviews: 0,
+                time: 0
+            },
+            {
+                reviews: 0,
+                time: 0
+            },
+            {
+                reviews: 0,
+                time: 0
+            },
+            {
+                reviews: 0,
+                time: 0
+            },
+            {
+                reviews: 0,
+                time: 0
+            },
+            {
+                reviews: 0,
+                time: 0
+            },
+            {
+                reviews: 0,
+                time: 0
+            },
+        ]
+    }
 
 })
 

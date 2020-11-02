@@ -14,9 +14,30 @@ module.exports = {
         return res.status(200).json({ message: "User deleted"})
     },
     async listUser(req,res) {
-        const user = await User.findById(req.userId).populate(['subjects', 'routines'])
+        try {
+            const user = await User.findById(req.userId).populate(['subjects', 'routines',{
+                path: 'reviews',
+                populate: [
+                    {path: 'subject_id'},
+                    {path: 'routine_id'}
+                ]
+            }])
 
-        return res.status(200).json(user)
+            const currentDate = new Date()
+            currentDate.setHours(0,0,0,0)
+
+            const filterReviews = user.reviews.filter(item => {
+                item.dateNextSequenceReview.setHours(0,0,0,0)
+                return item.dateNextSequenceReview <= currentDate
+            })
+
+            user.filterReviews = filterReviews
+            
+            return res.status(200).json(user)
+        } catch (error) {
+            return res.status(500).json({error: `Error on list user, ${error}`})
+        }
+
     },
     async indexReview(req,res) {
         try {
@@ -43,15 +64,9 @@ module.exports = {
     },
     async indexAllReviews(req,res) {
         try {
-            const Reviews = await User.findById(req.userId).populate({
-                path: "reviews",//populate in User model
-                populate: [ //deep populate in reviews to populate subject_id
-                    {path: 'subject_id'},
-                    {path: 'routine_id'},
-                ],
-            })//If you want to see password or email, put the .select("+passowrd or +email") method
+            const Reviews = await User.findById(req.userId)
 
-            return res.status(200).json(Reviews.reviews)//Verificar a vulnerabilidade
+            return res.status(200).json(Reviews)//Verificar a vulnerabilidade
         } catch (error) {
             
         }
@@ -78,11 +93,13 @@ module.exports = {
             routine.associatedReviews.push(review)
             user.reviews.push(review)
             
+            
             subject.save()
             routine.save()
             user.save()
+            const reviewPop = await Review.populate(review, ['subject_id', 'routine_id'])
             
-            return res.status(200).json({ user })
+            return res.status(200).json(reviewPop)
         } catch (error) {
             return res.status(500).json({ error: `Error on create review, ${error}`})
         }
@@ -121,7 +138,7 @@ module.exports = {
     async concludeReview(req,res) {
 
         try {
-            const review = await Review.findById(req.query.id).populate('routine_id')
+            const review = await Review.findById(req.query.id).populate(['routine_id', 'subject_id'])
 
             if (review.currentSequenceReview > (review.routine_id.sequence.length - 1)) {
                 //OLHAR SE OCORRER ALGUM BUG
@@ -222,7 +239,9 @@ module.exports = {
             
             review.save()
 
-            res.status(200).json({message: 'Edit review sucessfuly'})
+            const reviewPop = await Review.populate(review, ['subject_id', 'routine_id'])
+
+            res.status(200).json({message: 'Edit review sucessfuly', review: reviewPop})
 
         } catch (error) {
             res.status(500).json({error: `Update failed, ${error}`})
@@ -239,7 +258,7 @@ module.exports = {
     },
     async createSubject(req,res) {
 
-        const {title, marker, info } = req.body
+        const {title, marker } = req.body
         const user = await User.findById(req.userId)
 
         try {
@@ -248,7 +267,6 @@ module.exports = {
                 label: title,
                 value: title,
                 marker,
-                info,
                 user: req.userId
             })
 
@@ -263,17 +281,16 @@ module.exports = {
 
     },
     async editSubject(req,res) {
-        const { title, marker, info } = req.body
+        const { title, marker } = req.body
         const subject = await Subject.findById(req.query.id)//TENTAR FAZER A BUSCA NO MODEL USER
         try {
             subject.label = title
             subject.value = title
             subject.marker = marker,
-            subject.info = info
 
             subject.save()
 
-            return res.status(200).json({message: `Edit subject sucessfuly`})
+            return res.status(200).json({message: `Edit subject sucessfuly`, subject: subject})
 
         } catch (error) {
             return res.status(500).json({error: `Error on edit subject, ${error}`})
@@ -342,11 +359,12 @@ module.exports = {
         try {
 
             sequenceArray = sequence.split('-')
-
+            routine.label = sequence
+            routine.value = sequence
             routine.sequence = sequenceArray
             routine.save()
 
-            return res.status(200).json({message: `Edit routine sucessfuly`})
+            return res.status(200).json({message: `Edit routine sucessfuly`, routine: routine})
         } catch (error) {
             return res.status(500).json({error: `Error on edit routine, ${error}`})
         }
