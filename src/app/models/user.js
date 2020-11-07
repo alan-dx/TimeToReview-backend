@@ -39,10 +39,18 @@ const UserSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Routine'
     }],
+    resetCharts: {
+        type: Boolean,
+        default: false
+    },
     performance: {
         type: Array,
         default: [
-            {
+            {//Dom
+                reviews: 0,
+                time: 0
+            },
+            {//Seg
                 reviews: 0,
                 time: 0
             },
@@ -62,11 +70,7 @@ const UserSchema = new mongoose.Schema({
                 reviews: 0,
                 time: 0
             },
-            {
-                reviews: 0,
-                time: 0
-            },
-            {
+            {//Sáb
                 reviews: 0,
                 time: 0
             },

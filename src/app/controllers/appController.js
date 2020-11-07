@@ -24,14 +24,27 @@ module.exports = {
             }])
 
             const currentDate = new Date()
-            currentDate.setHours(0,0,0,0)
 
-            const filterReviews = user.reviews.filter(item => {
-                item.dateNextSequenceReview.setHours(0,0,0,0)
-                return item.dateNextSequenceReview <= currentDate
-            })
+            //FAZER UM GRÀFICO LAST WEEK, QUE CONTÉM TODAS AS ESTATÍSTICAS DA SEMANA PASSADA
 
-            user.filterReviews = filterReviews
+            if (currentDate.getDay() == 1) {
+                console.log('primeiro')
+                user.performance.forEach(item => {
+                    if (item.reviews != 0) {//Charts doesn't reset yet
+                        user.resetCharts = true
+                    }
+                })
+            }
+
+            if (currentDate.getDay() == 1 && user.resetCharts) {//It's moonday and it's time to reset charts? Reset chart of fact
+                console.log('segundo')
+                user.performance.map(item => {
+                    item.reviews = 0//Verificar se ta editando
+                })
+                user.resetCharts = false
+                user.markModified('performance')
+                user.save()
+            }
             
             return res.status(200).json(user)
         } catch (error) {
@@ -138,29 +151,43 @@ module.exports = {
     async concludeReview(req,res) {
 
         try {
+            console.log('review')
             const review = await Review.findById(req.query.id).populate(['routine_id', 'subject_id'])
+            const user = await User.findById(req.userId)
 
             if (review.currentSequenceReview > (review.routine_id.sequence.length - 1)) {
-                //OLHAR SE OCORRER ALGUM BUG
+                //OLHAR SE OCORRER ALGUM BUG => POSSÍVEL CAUSA
                 review.currentSequenceReview = review.routine_id.sequence.length - 1
             }
 
             if (review.currentSequenceReview < review.routine_id.sequence.length - 1) {
-
+                console.log('if')
+                
+                const currentDate = new Date()
                 const nextDate = review.dateNextSequenceReview.getDate() + Number(review.routine_id.sequence[review.currentSequenceReview + 1])
 
                 ++review.currentSequenceReview
                 review.dateNextSequenceReview = new Date(review.dateNextSequenceReview.getFullYear(), review.dateNextSequenceReview.getMonth(), nextDate)//review.dateNextSequenceReview.setDate(nextDate) doesn't worked for some reason
-             
+
+                ++user.performance[currentDate.getDay()].reviews
+
+                user.markModified('performance')
+                user.save()
                 review.save()
                 
                 return res.status(200).json(review)
             } else {
+                console.log('else')
 
+                const currentDate = new Date()
                 const nextDate = review.dateNextSequenceReview.getDate() + Number(review.routine_id.sequence[review.currentSequenceReview])
 
                 review.dateNextSequenceReview = new Date(review.dateNextSequenceReview.getFullYear(), review.dateNextSequenceReview.getMonth(), nextDate)//review.dateNextSequenceReview.setDate(nextDate) doesn't worked for some reason
 
+                ++user.performance[currentDate.getDay()].reviews
+
+                user.markModified('performance')
+                user.save()
                 review.save()
 
                 return res.status(200).json(review)
@@ -388,6 +415,9 @@ module.exports = {
         } catch (error) {
             return res.status(500).json({error: `Error on delete routine, ${error}`})
         }
+    },
+    async resetCharts(req,res) {
+
     }
 }
 
