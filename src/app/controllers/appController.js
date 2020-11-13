@@ -26,23 +26,22 @@ module.exports = {
             const currentDate = new Date()
 
             //FAZER UM GRÀFICO LAST WEEK, QUE CONTÉM TODAS AS ESTATÍSTICAS DA SEMANA PASSADA
+            console.log(user.resetCharts)
 
-            if (currentDate.getDay() == 1) {
-                console.log('primeiro')
-                user.performance.forEach(item => {
-                    if (item.reviews != 0) {//Charts doesn't reset yet
-                        user.resetCharts = true
-                    }
-                })
+            if (currentDate.getDay() == 2) { //Allows the chart to be restarted next week
+               user.resetCharts = false
+               user.markModified('resetCharts')
+               user.save()
             }
 
-            if (currentDate.getDay() == 1 && user.resetCharts) {//It's moonday and it's time to reset charts? Reset chart of fact
-                console.log('segundo')
+            if (currentDate.getDay() == 1 && !user.resetCharts) {//It's moonday and chart has not yet been reset?
+                console.log('Reseted Charts')
                 user.performance.map(item => {
                     item.reviews = 0//Verificar se ta editando
                 })
-                user.resetCharts = false
                 user.markModified('performance')
+                user.resetCharts = true
+                user.markModified('resetCharts')
                 user.save()
             }
             
@@ -416,8 +415,20 @@ module.exports = {
             return res.status(500).json({error: `Error on delete routine, ${error}`})
         }
     },
-    async resetCharts(req,res) {
+    async concludeCycle(req,res) {
+        const user = await User.findById(req.userId)
+        try {
+            const {day, cycles} = req.body
 
+            user.performance[day].cycles = cycles;
+            
+            user.markModified('performance')
+            await user.save()
+
+            return res.status(200).json(user.performance[day])
+        } catch (error) {
+            res.status(500).json({error: `Error on conclude cycle, ${error}`})
+        }
     }
 }
 

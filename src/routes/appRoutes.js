@@ -23,5 +23,6 @@ routes
     .get('/indexRoutines', appController.indexRoutines)
     .put('/editRoutine', appController.editRoutine)
     .delete('/deleteRoutine', appController.deleteRoutine)
+    .post('/concludeCycle', appController.concludeCycle)
 
 module.exports = routes;
