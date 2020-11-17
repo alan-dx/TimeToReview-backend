@@ -15,7 +15,9 @@ module.exports = {
     },
     async listUser(req,res) {
         try {
+
             const user = await User.findById(req.userId).populate(['subjects', 'routines',{
+                //deep populate
                 path: 'reviews',
                 populate: [
                     {path: 'subject_id'},
@@ -23,21 +25,29 @@ module.exports = {
                 ]
             }])
 
-            const currentDate = new Date()
+            const { date } = req.body
+            const currentDate = new Date(date)
+            console.log(currentDate)
 
             //FAZER UM GRÀFICO LAST WEEK, QUE CONTÉM TODAS AS ESTATÍSTICAS DA SEMANA PASSADA
-            console.log(user.resetCharts)
 
-            if (currentDate.getDay() == 2) { //Allows the chart to be restarted next week
-               user.resetCharts = false
-               user.markModified('resetCharts')
-               user.save()
+            if (currentDate.getDay() != 1) { //Allows the chart to be restarted next week
+                user.resetCharts = false
+                user.markModified('resetCharts')
+                user.save()
             }
 
             if (currentDate.getDay() == 1 && !user.resetCharts) {//It's moonday and chart has not yet been reset?
                 console.log('Reseted Charts')
                 user.performance.map(item => {
-                    item.reviews = 0//Verificar se ta editando
+                    item.reviews = 0
+                    item.cycles = [{
+                        init: '00:00:00', 
+                        finish: '00:00:00', 
+                        reviews: 0, 
+                        chronometer: new Date(new Date().setUTCHours(0,0,0,0)),
+                        do: false
+                    }]
                 })
                 user.markModified('performance')
                 user.resetCharts = true
@@ -47,6 +57,7 @@ module.exports = {
             
             return res.status(200).json(user)
         } catch (error) {
+            console.log(error)
             return res.status(500).json({error: `Error on list user, ${error}`})
         }
 
@@ -235,14 +246,11 @@ module.exports = {
             }
 
             if (req.body.subject_id) {
-                console.log('subject')
                 const subject = await Subject.findById(req.body.subject_id)
                 const oldSubject = await Subject.findById(review.subject_id)
 
                 const newSubject = oldSubject.associatedReviews.filter(item => {
                     return JSON.stringify(item) != JSON.stringify(review._id)
-                    //VERIFICAR POSTERIORMENTE SE SALVOU COMO STRING DENTRO DO ASSOCIATED,
-                    //POIS DEVE SER SALVO COMO OBJETO
                 }) 
                 oldSubject.associatedReviews = newSubject
 
@@ -255,13 +263,6 @@ module.exports = {
                 oldSubject.save()
 
             }
-            // review.date = req.body.date || "Not defined"
-            // review.hour = req.body.hour || "Not defined"
-            // review.fullDateTime = req.body.fullDateTime || 1598051730000
-            // review.routine = req.body.routine || "Not defined"
-            // review.routine_id = req.body.routine_id || "Not defined"
-            // review.subject = req.body.subject || "Not defined"
-            // review.subject_id = req.body.subject_id || "Not defined"
             
             review.save()
 

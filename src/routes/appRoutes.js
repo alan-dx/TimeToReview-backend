@@ -13,7 +13,7 @@ routes
     .post('/concludeReview', appController.concludeReview)
     .get('/indexReviews', appController.indexReview)
     .get('/indexAllReviews', appController.indexAllReviews)
-    .get('/listUser', appController.listUser)
+    .post('/listUser', appController.listUser)
     .delete('/deleteUser', appController.deleteUser)
     .post('/createSubject', appController.createSubject)
     .get('/indexSubjects', appController.indexSubjects)
