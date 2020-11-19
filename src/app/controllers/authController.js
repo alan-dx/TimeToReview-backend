@@ -44,7 +44,7 @@ module.exports = {
         const {email, password} = req.body;
 
         try {
-            const user = await User.findOne({ email: email }).select('+password')//here select is necessary beacause bcrypt need it to compare the password
+            const user = await User.findOne({ email: email }).select('+password').select('+email')//here select is necessary beacause bcrypt need it to compare the password
             
             if (!user) {
                 return res.status(401).json({ error: "User not found "})
@@ -56,6 +56,12 @@ module.exports = {
             }
             
             user.password = undefined
+            user.reviews = undefined
+            user.filterReviews = undefined
+            user.subjects = undefined
+            user.routines = undefined
+            user.resetCharts = undefined
+            user.performance = undefined
             
             return res.status(200).json({ user, token: generateToken({ id: user.id }) })
         } catch (error) {

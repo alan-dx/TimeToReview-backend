@@ -24,6 +24,9 @@ const UserSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     },
+    reminderTime: {
+        type: Date
+    },
     reviews: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Review'

@@ -23,7 +23,7 @@ module.exports = {
                     {path: 'subject_id'},
                     {path: 'routine_id'}
                 ]
-            }])
+            }]).select("+email")
 
             const { date } = req.body
             const currentDate = new Date(date)
@@ -161,11 +161,10 @@ module.exports = {
     async concludeReview(req,res) {
 
         try {
-            console.log('review')
             const review = await Review.findById(req.query.id).populate(['routine_id', 'subject_id'])
             const user = await User.findById(req.userId)
 
-            if (review.currentSequenceReview > (review.routine_id.sequence.length - 1)) {
+            if (review.currentSequenceReview > (review.routine_id.sequence.length - 1)) {//PODE OCORRER QUANDO O USUÁRIO TROCA A SEQUENCIA DE REVISÃO POR UMA MENOR
                 //OLHAR SE OCORRER ALGUM BUG => POSSÍVEL CAUSA
                 review.currentSequenceReview = review.routine_id.sequence.length - 1
             }
@@ -173,23 +172,23 @@ module.exports = {
             if (review.currentSequenceReview < review.routine_id.sequence.length - 1) {
                 console.log('if')
                 
-                const currentDate = new Date()
-                const nextDate = review.dateNextSequenceReview.getDate() + Number(review.routine_id.sequence[review.currentSequenceReview + 1])
+                const currentDate = new Date(req.query.date)
+                const nextDate = review.dateNextSequenceReview.getDate() + Number(review.routine_id.sequence[review.currentSequenceReview + 1])//review.currentSequenceReview + 1 to take the next
 
                 ++review.currentSequenceReview
                 review.dateNextSequenceReview = new Date(review.dateNextSequenceReview.getFullYear(), review.dateNextSequenceReview.getMonth(), nextDate)//review.dateNextSequenceReview.setDate(nextDate) doesn't worked for some reason
 
-                ++user.performance[currentDate.getDay()].reviews
+                ++user.performance[currentDate.getDay()].reviews//Increment the reviews count on the day
 
                 user.markModified('performance')
                 user.save()
                 review.save()
                 
                 return res.status(200).json(review)
-            } else {
+            } else { //When the currentSequenceReview is on the last sequence of the array
                 console.log('else')
 
-                const currentDate = new Date()
+                const currentDate = new Date(req.query.date)
                 const nextDate = review.dateNextSequenceReview.getDate() + Number(review.routine_id.sequence[review.currentSequenceReview])
 
                 review.dateNextSequenceReview = new Date(review.dateNextSequenceReview.getFullYear(), review.dateNextSequenceReview.getMonth(), nextDate)//review.dateNextSequenceReview.setDate(nextDate) doesn't worked for some reason
@@ -429,6 +428,19 @@ module.exports = {
             return res.status(200).json(user.performance[day])
         } catch (error) {
             res.status(500).json({error: `Error on conclude cycle, ${error}`})
+        }
+    },
+    async setTimeReminder(req,res) {
+        const user = await User.findById(req.userId).select(['-reviews', '-subjects', '-routines', '-performance'])
+        try {
+            const {date} = req.body
+            user.reminderTime = date
+
+            user.save()
+
+            return res.status(200).json(user)
+        } catch (error) {
+            return res.status(500).json({message: `Error on setTimeReminder, ${error}`})
         }
     }
 }
