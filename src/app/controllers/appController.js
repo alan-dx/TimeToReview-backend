@@ -434,6 +434,7 @@ module.exports = {
         const user = await User.findById(req.userId).select(['-reviews', '-subjects', '-routines', '-performance'])
         try {
             const {date} = req.body
+            console.log(date)
             user.reminderTime = date
 
             user.save()
