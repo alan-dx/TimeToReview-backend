@@ -443,6 +443,32 @@ module.exports = {
         } catch (error) {
             return res.status(500).json({message: `Error on setTimeReminder, ${error}`})
         }
+    },
+    async resetCharts(req,res) {
+        const user = await User.findById(req.userId)
+        try {
+            console.log('Reseted Charts')
+
+            user.performance.map(item => {
+                item.reviews = 0
+                item.cycles = [{
+                    init: '00:00:00', 
+                    finish: '00:00:00', 
+                    reviews: 0, 
+                    chronometer: new Date(new Date().setUTCHours(0,0,0,0)),
+                    do: false
+                }]
+            })
+            
+            user.markModified('performance')
+            await user.save()
+
+            return res.status(200).json(user.performance)
+            
+        } catch (error) {
+            console.log(error)
+            return res.status(500).json({message: `Error on resetCharts, ${error}`})
+        }
     }
 }
 

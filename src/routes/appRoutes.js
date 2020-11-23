@@ -25,5 +25,6 @@ routes
     .delete('/deleteRoutine', appController.deleteRoutine)
     .post('/concludeCycle', appController.concludeCycle)
     .post('/setTimeReminder', appController.setTimeReminder)
+    .get('/resetCharts', appController.resetCharts)
 
 module.exports = routes;
