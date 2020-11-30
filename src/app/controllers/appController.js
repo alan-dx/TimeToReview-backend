@@ -469,6 +469,20 @@ module.exports = {
             console.log(error)
             return res.status(500).json({message: `Error on resetCharts, ${error}`})
         }
+    },
+    async changeUserName(req,res) {
+        const {name} = req.body;
+        const user = await User.findById(req.userId)
+        
+        try {
+            user.name = name
+            await user.save()
+
+            return res.status(200).json(user.name)
+        } catch (error) {
+            return res.status(500).json({message: `Error on changeUserName, ${error}`})
+        }
+
     }
 }
 

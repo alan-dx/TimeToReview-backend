@@ -26,5 +26,6 @@ routes
     .post('/concludeCycle', appController.concludeCycle)
     .post('/setTimeReminder', appController.setTimeReminder)
     .get('/resetCharts', appController.resetCharts)
+    .post('/changeUserName', appController.changeUserName)
 
 module.exports = routes;
