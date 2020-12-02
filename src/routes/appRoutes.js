@@ -27,5 +27,7 @@ routes
     .post('/setTimeReminder', appController.setTimeReminder)
     .get('/resetCharts', appController.resetCharts)
     .post('/changeUserName', appController.changeUserName)
+    .post('/verifyPassword', appController.verifyPassword)
+    .post('/changePassword', appController.changePassword)
 
 module.exports = routes;

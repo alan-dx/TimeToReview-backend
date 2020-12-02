@@ -29,12 +29,12 @@ module.exports = {
             const currentDate = new Date(date)
             console.log(currentDate)
 
-            //FAZER UM GRÀFICO LAST WEEK, QUE CONTÉM TODAS AS ESTATÍSTICAS DA SEMANA PASSADA
+            //FAZER UM GRÁFICO LAST WEEK, QUE CONTÉM TODAS AS ESTATÍSTICAS DA SEMANA PASSADA
 
             if (currentDate.getDay() != 1) { //Allows the chart to be restarted next week
                 user.resetCharts = false
                 user.markModified('resetCharts')
-                user.save()
+                // user.save()
             }
 
             if (currentDate.getDay() == 1 && !user.resetCharts) {//It's moonday and chart has not yet been reset?
@@ -52,9 +52,12 @@ module.exports = {
                 user.markModified('performance')
                 user.resetCharts = true
                 user.markModified('resetCharts')
-                user.save()
+                // user.save()
             }
-            
+
+            user.change = false
+
+            user.save()
             return res.status(200).json(user)
         } catch (error) {
             console.log(error)
@@ -409,7 +412,7 @@ module.exports = {
 
                 return res.status(200).json({message: "Delete routine sucessfuly"})
             } else {
-                return res.status(401).json({error: "NTO"})
+                return res.status(401).json({error: "NTO"})//Not the Owner
             }
         } catch (error) {
             return res.status(500).json({error: `Error on delete routine, ${error}`})
@@ -480,9 +483,46 @@ module.exports = {
 
             return res.status(200).json(user.name)
         } catch (error) {
-            return res.status(500).json({message: `Error on changeUserName, ${error}`})
+            return res.status(500).json({error: `Error on changeUserName, ${error}`})
         }
 
+    },
+    async verifyPassword(req,res) {
+        const bcrypt = require('bcryptjs') //maybe is better for security
+        const { password } = req.body;
+        const user = await User.findById(req.userId).select('+password')
+        try {
+
+            if (!await bcrypt.compare(password, user.password)) {
+                return res.status(401).json({ error: "Invalid Password"})
+            }
+
+            user.change = true
+            user.save()
+
+            return res.status(200).json({message: "Access granted"})
+        } catch (error) {
+            return res.status(500).json({ error: "Error on verifyPassword"})
+        }
+    },
+    async changePassword(req,res) {
+        const bcrypt = require('bcryptjs')
+        const { password } = req.body
+        const user = await User.findById(req.userId).select('+password')
+        try {
+
+            if (!user.change) {//security
+                return res.status(401).json({error: 'Unauthorized reset'})   
+            }
+
+            const hashedPasword = await bcrypt.hash(password, 12)
+            user.password = hashedPasword
+            user.save()
+
+            return res.status(201).json({message: "Password reset"})
+        } catch (error) {
+            return res.status(500).json({error: `Error on changePassword, ${error}`})
+        }
     }
 }
 

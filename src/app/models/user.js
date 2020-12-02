@@ -120,6 +120,10 @@ const UserSchema = new mongoose.Schema({
                 }]
             },
         ]
+    },
+    change: {
+        type: Boolean,
+        default: false
     }
 
 })

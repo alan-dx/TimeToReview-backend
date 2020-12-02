@@ -5,7 +5,7 @@ const authConfig = require('../config/auth.json')
 
 function generateToken(params = {}) {
     return jwt.sign(params, authConfig.secret, {
-        expiresIn: 3600
+        expiresIn: 1800
     });
 }
 
@@ -47,7 +47,7 @@ module.exports = {
             const user = await User.findOne({ email: email }).select('+password').select('+email')//here select is necessary beacause bcrypt need it to compare the password
             
             if (!user) {
-                return res.status(401).json({ error: "User not found "})
+                return res.status(404).json({ error: "User not found "})
             }
 
             
