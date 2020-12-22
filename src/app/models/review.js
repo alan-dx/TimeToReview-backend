@@ -12,10 +12,6 @@ const ReviewSchema = mongoose.Schema({
         ref: 'User',
         required: true
     },
-    timer: {
-        type: String,
-        required: true
-    },
     routine_id: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Routine',
@@ -39,6 +35,12 @@ const ReviewSchema = mongoose.Schema({
     createdAt: {
         type: Date,
         default: Date.now
+    },
+    track: {
+        type: Object
+    },
+    notes: {
+        type: Object
     }
 })
 

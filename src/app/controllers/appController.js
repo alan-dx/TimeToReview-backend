@@ -16,6 +16,7 @@ module.exports = {
     async listUser(req,res) {
         try {
 
+            var clone = require('clone');
             const user = await User.findById(req.userId).populate(['subjects', 'routines',{
                 //deep populate
                 path: 'reviews',
@@ -31,6 +32,9 @@ module.exports = {
 
             //FAZER UM GRÁFICO LAST WEEK, QUE CONTÉM TODAS AS ESTATÍSTICAS DA SEMANA PASSADA
 
+            //A MÉDIA SERA CALCULADA SOBRE A SEMANA ANTERIOR, E SERÁ USADA DURANTE TODA A SEMANA. ATÉ O DIA
+            //DE RESET DOS GRÁFICOS, QUE É QUANDO ELE CALCULA A NOVA MÉDIA
+
             if (currentDate.getDay() != 1) { //Allows the chart to be restarted next week
                 user.resetCharts = false
                 user.markModified('resetCharts')
@@ -38,8 +42,11 @@ module.exports = {
             }
 
             if (currentDate.getDay() == 1 && !user.resetCharts) {//It's moonday and chart has not yet been reset?
-                console.log('Reseted Charts')
-                user.performance.map(item => {
+                console.log('Reset Charts')
+                user.lastWeekPerformance = clone(user.performance) //JS is POO
+                user.markModified('lastWeekPerformance')
+
+                user.performance.forEach(item => {
                     item.reviews = 0
                     item.cycles = [{
                         init: '00:00:00', 
@@ -49,6 +56,7 @@ module.exports = {
                         do: false
                     }]
                 })
+
                 user.markModified('performance')
                 user.resetCharts = true
                 user.markModified('resetCharts')
@@ -99,26 +107,28 @@ module.exports = {
     },
     async createReview(req,res) {
 
-        const { title, timer, routine_id, subject_id, dateNextSequenceReview } = req.body;
+        const { title, routine_id, subject_id, dateNextSequenceReview, track, notes } = req.body;
         const user = await User.findById(req.userId)
         const subject = await Subject.findById(subject_id)//TROCAR, FAZENDO A PESQUISA NO USER MODEL PARA FACILITAR A QUERY
         const routine = await Routine.findById(routine_id)
 
         try {
 
+            console.log(req.body)
+
             const review = await Review.create({
                 title,
                 user: req.userId,
-                timer,
                 routine_id,
                 subject_id,
-                dateNextSequenceReview
+                dateNextSequenceReview,
+                track,
+                notes
             })
 
             subject.associatedReviews.push(review)
             routine.associatedReviews.push(review)
             user.reviews.push(review)
-            
             
             subject.save()
             routine.save()
@@ -218,10 +228,6 @@ module.exports = {
                 review.title = req.body.title
             }
 
-            if (req.body.timer) {
-                review.timer = req.body.timer || "Not define"
-            }
-
             if (req.body.routine_id) {
                 console.log('rotina')
                 const routine = await Routine.findById(req.body.routine_id)
@@ -265,7 +271,17 @@ module.exports = {
                 oldSubject.save()
 
             }
-            
+
+            if (req.body.track) {
+                review.track = req.body.track
+                console.log('track')
+            }
+
+            if (req.body.notes) {
+                review.notes = req.body.notes
+                console.log('notes')
+            }
+
             review.save()
 
             const reviewPop = await Review.populate(review, ['subject_id', 'routine_id'])
@@ -273,7 +289,7 @@ module.exports = {
             res.status(200).json({message: 'Edit review sucessfuly', review: reviewPop})
 
         } catch (error) {
-            res.status(500).json({error: `Update failed, ${error}`})
+            res.status(500).json({error: `Error on editReview, ${error}`})
         }
     },
     async indexSubjects(req,res) {

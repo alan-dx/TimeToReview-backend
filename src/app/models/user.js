@@ -121,6 +121,81 @@ const UserSchema = new mongoose.Schema({
             },
         ]
     },
+    lastWeekPerformance: {
+        type: Array,
+        default: [
+            {//Dom
+                reviews: 0,
+                cycles: [{
+                        init: '00:00:00', 
+                        finish: '00:00:00', 
+                        reviews: 0, 
+                        chronometer: new Date(new Date().setUTCHours(0,0,0,0)),
+                        do: false
+                    }]
+            },
+            {//Seg
+                reviews: 0,
+                cycles: [{
+                    init: '00:00:00', 
+                    finish: '00:00:00', 
+                    reviews: 0, 
+                    chronometer: new Date(new Date().setUTCHours(0,0,0,0)),
+                    do: false
+                }]
+            },
+            {
+                reviews: 0,
+                cycles: [{
+                    init: '00:00:00', 
+                    finish: '00:00:00', 
+                    reviews: 0, 
+                    chronometer: new Date(new Date().setUTCHours(0,0,0,0)),
+                    do: false
+                }]
+            },
+            {
+                reviews: 0,
+                cycles: [{
+                    init: '00:00:00', 
+                    finish: '00:00:00', 
+                    reviews: 0, 
+                    chronometer: new Date(new Date().setUTCHours(0,0,0,0)),
+                    do: false
+                }]
+            },
+            {
+                reviews: 0,
+                cycles: [{
+                    init: '00:00:00', 
+                    finish: '00:00:00', 
+                    reviews: 0, 
+                    chronometer: new Date(new Date().setUTCHours(0,0,0,0)),
+                    do: false
+                }]
+            },
+            {
+                reviews: 0,
+                cycles: [{
+                    init: '00:00:00', 
+                    finish: '00:00:00', 
+                    reviews: 0, 
+                    chronometer: new Date(new Date().setUTCHours(0,0,0,0)),
+                    do: false
+                }]
+            },
+            {//Sáb
+                reviews: 0,
+                cycles: [{
+                    init: '00:00:00', 
+                    finish: '00:00:00', 
+                    reviews: 0, 
+                    chronometer: new Date(new Date().setUTCHours(0,0,0,0)),
+                    do: false
+                }]
+            },
+        ]
+    },
     change: {
         type: Boolean,
         default: false

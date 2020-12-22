@@ -11,7 +11,7 @@ app.use(authRoutes)
 app.use(appRoutes)
 app.use(cors())
 
-
+//VERIFICAR O QUE HOUVE COM O SERVER
 //not found - middleware
 app.use((req,res,next) => {
     const error = new Error('Not found')
