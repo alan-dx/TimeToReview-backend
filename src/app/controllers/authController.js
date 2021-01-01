@@ -1,10 +1,12 @@
 const User = require('../models/user')
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const authConfig = require('../config/auth.json')
+// const authConfig = require('../config/auth.json')
+const crypto = require('crypto')
+const mailer = require('../../modules/mailer')
 
 function generateToken(params = {}) {
-    return jwt.sign(params, authConfig.secret, {
+    return jwt.sign(params,process.env.SECRET_KEY, {
         expiresIn: 3600
     });
 }
@@ -66,6 +68,110 @@ module.exports = {
             return res.status(200).json({ user, token: generateToken({ id: user.id }) })
         } catch (error) {
             return res.status(500).json({ error: `SignIn failed, ${error}`})
+        }
+    },
+    async forgotPassword(req,res) {
+        const { email } = req.body
+
+        try {
+            
+            const user = await User.findOne({email})
+
+            
+            if (!user) {
+                return res.status(404).json({error: 'User not found'})
+            }
+            
+            const token = crypto.randomBytes(20).toString('hex')//generate reset token
+            
+            const request = mailer
+                .post("send", {'version': 'v3.1'})
+                .request({
+                "Messages":[
+                    {
+                    "From": {
+                        "Email": "alan.almeida998@gmail.com",
+                        "Name": "TimeToReview"
+                    },
+                    "To": [
+                        {
+                        "Email": email,
+                        "Name": "Alan"
+                        }
+                    ],
+                    "Subject": "TimeToReview - Recuperação de Senha",
+                    "TextPart": "",
+                    "HTMLPart": `<h2>Você esqueceu sua senha? Sem problemas, vamos criar outra!</h2><h3>Copie e cole o token abaixo no campo indicado do aplicativo</h3><br />TOKEN: <strong>${token}</strong>`
+                    +`<br /><h3>Caso não tenha sido você quem solicitou essa modificação entre em contato com nossa equipe.</h3>`,
+                    "CustomID": "TTRForgotPassword"
+                    }
+                ]
+                })
+
+            const now = new Date()
+            now.setHours(now.getHours() + 1)
+
+            user.passwordResetToken = token
+            user.passwordResetExpires = now
+
+            user.save()
+
+            // mailer.sendMail({
+            //     to: email,
+            //     from: 'alanalmeida.emp@gmail.com',
+            //     template: 'auth/forgot_password',
+            //     context: { token }
+            // }, (err) => {
+            //     if (err)
+            //     return res.status(400).json({ error: 'Cannot send forgot password email'})
+            // })
+
+            request
+                .then((result) => {
+                    console.log(result.body)
+                })
+                .catch((err) => {
+                    console.log(err.statusCode)
+                })
+
+
+            return res.status(200).json({ message: 'Email successfully sent'})
+        } catch (error) {
+            console.log(error)
+            res.status(400).json({ error: 'Error on forgot password, try again'})
+        }
+    },
+    async resetPassword(req,res) {
+        const { email, token, password } = req.body
+
+        try {
+            const user = await User.findOne({ email })
+                .select('+passwordResetToken passwordResetExpires')
+            
+            if (!user) {
+                return res.status(404).json({error: 'User not found'})
+            }
+
+            if (token != user.passwordResetToken) {
+                return res.status(409).json({ error: 'Token invalid'})
+            }
+
+            const now = new Date()
+
+            if (now > user.passwordResetExpires) {
+                return res.status(401).json({ error: 'Token expired, generate a new one'})
+            }
+
+            const hashedPasword = await bcrypt.hash(password, 12)
+
+            user.password = hashedPasword
+
+            await user.save()
+
+            res.status(200).json({ message: "Password reseted"})
+
+        } catch (error) {
+            res.status(400).json({ error: "Error on reset password, try again"})
         }
     }
 }

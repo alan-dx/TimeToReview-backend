@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
+require('dotenv').config()
 
-mongoose.connect('mongodb://localhost/ttr', {
+mongoose.connect(`mongodb://${process.env.DB_HOST}`, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
     useCreateIndex: true

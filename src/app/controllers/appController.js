@@ -522,9 +522,11 @@ module.exports = {
         }
     },
     async changePassword(req,res) {
+
         const bcrypt = require('bcryptjs')
         const { password } = req.body
         const user = await User.findById(req.userId).select('+password')
+
         try {
 
             if (!user.change) {//security
@@ -533,7 +535,8 @@ module.exports = {
 
             const hashedPasword = await bcrypt.hash(password, 12)
             user.password = hashedPasword
-            user.save()
+            
+            await user.save()
 
             return res.status(201).json({message: "Password reset"})
         } catch (error) {

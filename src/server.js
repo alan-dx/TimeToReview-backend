@@ -11,7 +11,6 @@ app.use(authRoutes)
 app.use(appRoutes)
 app.use(cors())
 
-//VERIFICAR O QUE HOUVE COM O SERVER
 //not found - middleware
 app.use((req,res,next) => {
     const error = new Error('Not found')
@@ -25,7 +24,7 @@ app.use((error,req,res,next) => {
     res.json({ error: error.message })
 })
 
-
-app.listen(3333, () => {
+//SE HOUVER ALGUM ERRO EM PRODUÇÃO, VERIFICA SE NÃO PRECISA IMPORTAR O DOTENV AQ
+app.listen(process.env.PORT, () => {
     console.log(`Server running`)
 })
