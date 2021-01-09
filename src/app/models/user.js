@@ -40,7 +40,7 @@ const UserSchema = new mongoose.Schema({
     }],
     routines: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Routine'
+        ref: 'Routine',
     }],
     resetCharts: {
         type: Boolean,

@@ -28,7 +28,6 @@ module.exports = {
 
             const { date } = req.body
             const currentDate = new Date(date)
-            console.log(currentDate)
 
             //FAZER UM GRÁFICO LAST WEEK, QUE CONTÉM TODAS AS ESTATÍSTICAS DA SEMANA PASSADA
 

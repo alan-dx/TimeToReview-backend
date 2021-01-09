@@ -1,4 +1,5 @@
 const User = require('../models/user')
+const Routine = require('../models/routine')
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 // const authConfig = require('../config/auth.json')
@@ -7,7 +8,7 @@ const mailer = require('../../modules/mailer')
 
 function generateToken(params = {}) {
     return jwt.sign(params,process.env.SECRET_KEY, {
-        expiresIn: 3600
+        expiresIn: 78000
     });
 }
 
@@ -31,8 +32,19 @@ module.exports = {
             const user = await User.create({//select:false don't work here beacause is not a query method. Then user.atributte = undefinde is necessary
                 name,
                 password: hashedPasword,
-                email,
+                email
             })
+
+            const routine = await Routine.create({
+                sequence: ["0","3","7","14","21","30"],
+                user: user._id,
+                label: '0-3-7-14-21-30',
+                value: '0-3-7-14-21-30'
+            })
+
+            user.routines.push(routine)
+
+            await user.save()
 
             user.password = undefined
             user.email = undefined;
