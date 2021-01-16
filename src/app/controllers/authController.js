@@ -55,15 +55,19 @@ module.exports = {
         }
     },
     async signIn(req,res) {
-        const {email, password} = req.body;
+        const {email, password } = req.body;
 
         try {
             const user = await User.findOne({ email: email }).select('+password').select('+email')//here select is necessary beacause bcrypt need it to compare the password
-            
+
             if (!user) {
-                return res.status(404).json({ error: "User not found "})
+                return res.status(404).json({ error: "User not found"})
             }
 
+            if (user.disable) {
+                console.log('asd')
+                return res.status(406).json({ error: "User disable"})
+            }
             
             if (!await bcrypt.compare(password, user.password)) {
                 return res.status(401).json({ error: "Invalid Password"})
@@ -76,7 +80,7 @@ module.exports = {
             user.routines = undefined
             user.resetCharts = undefined
             user.performance = undefined
-            
+
             return res.status(200).json({ user, token: generateToken({ id: user.id }) })
         } catch (error) {
             return res.status(500).json({ error: `SignIn failed, ${error}`})

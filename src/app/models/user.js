@@ -25,7 +25,8 @@ const UserSchema = new mongoose.Schema({
         default: Date.now
     },
     reminderTime: {
-        type: Date
+        type: Date,
+        default: new Date("1899-12-31T13:01:00.000Z")
     },
     reviews: [{
         type: mongoose.Schema.Types.ObjectId,
@@ -45,6 +46,9 @@ const UserSchema = new mongoose.Schema({
     resetCharts: {
         type: Boolean,
         default: false
+    },
+    resetChartsMondayDate: {
+        type: Date,
     },
     performance: {
         type: Array,
@@ -208,6 +212,17 @@ const UserSchema = new mongoose.Schema({
         type: Date,
         select: false,
         default: Date.now
+    },
+    lastDateUseApp: {
+        type: Date,
+    },
+    premium: {
+        type: Boolean,
+        default: false
+    },
+    disable: {
+        type: Boolean,
+        default: false
     }
 
 })

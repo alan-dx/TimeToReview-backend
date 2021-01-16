@@ -27,21 +27,19 @@ module.exports = {
             }]).select("+email")
 
             const { date } = req.body
+
             const currentDate = new Date(date)
-
+            console.log(currentDate)
+            
             //FAZER UM GRÁFICO LAST WEEK, QUE CONTÉM TODAS AS ESTATÍSTICAS DA SEMANA PASSADA
+            let lastDateUseApp = clone(user.lastDateUseApp)
+            user.lastDateUseApp = currentDate
+            user.markModified('lastDateUseApp')
 
-            //A MÉDIA SERA CALCULADA SOBRE A SEMANA ANTERIOR, E SERÁ USADA DURANTE TODA A SEMANA. ATÉ O DIA
-            //DE RESET DOS GRÁFICOS, QUE É QUANDO ELE CALCULA A NOVA MÉDIA
+            const diffLastCurrentDate = new Date(currentDate - lastDateUseApp)
 
-            if (currentDate.getDay() != 1) { //Allows the chart to be restarted next week
-                user.resetCharts = false
-                user.markModified('resetCharts')
-                // user.save()
-            }
-
-            if (currentDate.getDay() == 1 && !user.resetCharts) {//It's moonday and chart has not yet been reset?
-                console.log('Reset Charts')
+            if (diffLastCurrentDate.getUTCDate() > 7) {//If the user doesn't use the app in 7 days, occurs before monday conditional
+                console.log('reset seven days')
                 user.lastWeekPerformance = clone(user.performance) //JS is POO
                 user.markModified('lastWeekPerformance')
 
@@ -57,14 +55,86 @@ module.exports = {
                 })
 
                 user.markModified('performance')
+
                 user.resetCharts = true
                 user.markModified('resetCharts')
-                // user.save()
+            }
+            
+            //user.resetCharts avoid a double resetChart
+            if (currentDate.getDay() == 1 && !user.resetCharts) {//It's monday and chart has not yet been reset?
+                console.log('reset monday')
+
+                // if don't use !user.resetCharts the chart will reset all day on monday
+                user.lastWeekPerformance = clone(user.performance) //JS is POO
+                user.markModified('lastWeekPerformance')
+                
+                user.performance.forEach(item => {//clean performance data
+                    item.reviews = 0
+                    item.cycles = [{
+                        init: '00:00:00', 
+                        finish: '00:00:00', 
+                        reviews: 0, 
+                        chronometer: new Date(new Date().setUTCHours(0,0,0,0)),
+                        do: false
+                    }]
+                })
+                
+                user.markModified('performance')
+                
+                user.resetCharts = true
+                user.markModified('resetCharts')
+                user.resetChartsMondayDate = new Date(date)
+
+            }
+
+            if (currentDate.getDay() > 1 && currentDate.getDay() != 0 && !user.resetCharts) {//conditional in case the user has not accessed the app on Monday and the graph has not been reset (the bug)
+                // currentDate.getDay() != 0 because the seven days condition resolve for this case
+                //get the monday of the week
+
+
+                let current = new Date(date)
+                let day = current.getDay()
+                let diff = current.getDate() - day + (day == 0 ? -6:1); // adjust when day is sunday
+                let mondayOfTheWeek = new Date(current.setDate(diff))
+                let resetChartsMondayDate = new Date(user.resetChartsMondayDate)
+                //get the monday of the week
+
+                if (mondayOfTheWeek.getDate() != resetChartsMondayDate.getDate()) {
+                    console.log('reset dont used monday')
+                    user.lastWeekPerformance = clone(user.performance) //JS is POO
+                    user.markModified('lastWeekPerformance')
+    
+                    user.performance.forEach(item => {
+                        item.reviews = 0
+                        item.cycles = [{
+                            init: '00:00:00', 
+                            finish: '00:00:00', 
+                            reviews: 0, 
+                            chronometer: new Date(new Date().setUTCHours(0,0,0,0)),
+                            do: false
+                        }]
+                    })
+    
+                    user.markModified('performance')
+    
+                    user.resetCharts = true
+                    user.markModified('resetCharts')
+                    user.resetChartsMondayDate = mondayOfTheWeek
+
+                }
+
+            }
+             
+            if (currentDate.getDay() != 1 && user.resetCharts) { //Allows the chart to be restarted next week, when is reset on monday
+                console.log('always chart')
+                user.resetCharts = false
+                user.markModified('resetCharts')
             }
 
             user.change = false
 
             user.save()
+
             return res.status(200).json(user)
         } catch (error) {
             console.log(error)
@@ -106,14 +176,12 @@ module.exports = {
     },
     async createReview(req,res) {
 
-        const { title, routine_id, subject_id, dateNextSequenceReview, track, notes } = req.body;
+        const { title, routine_id, subject_id, dateNextSequenceReview, track, notes, date } = req.body;
         const user = await User.findById(req.userId)
         const subject = await Subject.findById(subject_id)//TROCAR, FAZENDO A PESQUISA NO USER MODEL PARA FACILITAR A QUERY
         const routine = await Routine.findById(routine_id)
 
         try {
-
-            console.log(req.body)
 
             const review = await Review.create({
                 title,
@@ -122,7 +190,8 @@ module.exports = {
                 subject_id,
                 dateNextSequenceReview,
                 track,
-                notes
+                notes,
+                createdAt: new Date(date)
             })
 
             subject.associatedReviews.push(review)
@@ -176,8 +245,10 @@ module.exports = {
             const review = await Review.findById(req.query.id).populate(['routine_id', 'subject_id'])
             const user = await User.findById(req.userId)
 
-            if (review.currentSequenceReview > (review.routine_id.sequence.length - 1)) {//PODE OCORRER QUANDO O USUÁRIO TROCA A SEQUENCIA DE REVISÃO POR UMA MENOR
+            if (review.currentSequenceReview > (review.routine_id.sequence.length - 1)) {//In case the user selects a shorter sequence
+                //here not use >= because else case below resolve it
                 //OLHAR SE OCORRER ALGUM BUG => POSSÍVEL CAUSA
+                console.log('special case')
                 review.currentSequenceReview = review.routine_id.sequence.length - 1
             }
 
@@ -185,10 +256,13 @@ module.exports = {
                 console.log('if')
                 
                 const currentDate = new Date(req.query.date)
-                const nextDate = review.dateNextSequenceReview.getDate() + Number(review.routine_id.sequence[review.currentSequenceReview + 1])//review.currentSequenceReview + 1 to take the next
+                currentDate.setUTCHours(5,0,0,0)
+
+                const nextDate = currentDate.getDate() + Number(review.routine_id.sequence[review.currentSequenceReview + 1])//review.currentSequenceReview + 1 to take the next
 
                 ++review.currentSequenceReview
-                review.dateNextSequenceReview = new Date(review.dateNextSequenceReview.getFullYear(), review.dateNextSequenceReview.getMonth(), nextDate)//review.dateNextSequenceReview.setDate(nextDate) doesn't worked for some reason
+                review.dateNextSequenceReview = new Date(currentDate.getFullYear(), currentDate.getMonth(), nextDate)//review.dateNextSequenceReview.setDate(nextDate) doesn't worked for some reason
+                review.dateNextSequenceReview.setUTCHours(5,0,0,0)
 
                 ++user.performance[currentDate.getDay()].reviews//Increment the reviews count on the day
 
@@ -201,9 +275,11 @@ module.exports = {
                 console.log('else')
 
                 const currentDate = new Date(req.query.date)
-                const nextDate = review.dateNextSequenceReview.getDate() + Number(review.routine_id.sequence[review.currentSequenceReview])
+                currentDate.setUTCHours(5,0,0,0)
+                const nextDate = currentDate.getDate() + Number(review.routine_id.sequence[review.currentSequenceReview])
 
-                review.dateNextSequenceReview = new Date(review.dateNextSequenceReview.getFullYear(), review.dateNextSequenceReview.getMonth(), nextDate)//review.dateNextSequenceReview.setDate(nextDate) doesn't worked for some reason
+                review.dateNextSequenceReview = new Date(currentDate.getFullYear(), currentDate.getMonth(), nextDate)//review.dateNextSequenceReview.setDate(nextDate) doesn't worked for some reason
+                review.dateNextSequenceReview.setUTCHours(5,0,0,0)
 
                 ++user.performance[currentDate.getDay()].reviews
 
