@@ -3,7 +3,7 @@ const mongoose = require('../../database/index');
 
 mongoose.set('useFindAndModify', false);
 
-const UserSchema = new mongoose.Schema({
+const UserSchema = new mongoose.Schema({//like table on SQL. This is the Model
     name: {
         type: String,
         required: true

@@ -176,7 +176,7 @@ module.exports = {
     },
     async createReview(req,res) {
 
-        const { title, routine_id, subject_id, dateNextSequenceReview, track, notes, date } = req.body;
+        const { title, routine_id, subject_id, dateNextSequenceReview, track, notes, date, image } = req.body;
         const user = await User.findById(req.userId)
         const subject = await Subject.findById(subject_id)//TROCAR, FAZENDO A PESQUISA NO USER MODEL PARA FACILITAR A QUERY
         const routine = await Routine.findById(routine_id)
@@ -191,6 +191,7 @@ module.exports = {
                 dateNextSequenceReview,
                 track,
                 notes,
+                image,
                 createdAt: new Date(date)
             })
 
@@ -355,6 +356,11 @@ module.exports = {
             if (req.body.notes) {
                 review.notes = req.body.notes
                 console.log('notes')
+            }
+
+            if (req.body.image) {
+                review.image = req.body.image
+                console.log('image')
             }
 
             review.save()

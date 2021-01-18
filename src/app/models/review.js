@@ -7,7 +7,7 @@ const ReviewSchema = mongoose.Schema({
         type: String,
         required: true
     },
-    user: {
+    user: {//security: when trying to delete a review, if it does not belong to the user who sent the request the request is blocked
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true
@@ -41,6 +41,9 @@ const ReviewSchema = mongoose.Schema({
     },
     notes: {
         type: Object
+    },
+    image: {
+        type: String
     }
 })
 
