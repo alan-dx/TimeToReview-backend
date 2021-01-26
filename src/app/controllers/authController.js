@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 // const authConfig = require('../config/auth.json')
 const crypto = require('crypto')
 const mailer = require('../../modules/mailer')
+const path = require('path')
 
 function generateToken(params = {}) {
     return jwt.sign(params,process.env.SECRET_KEY, {
@@ -188,6 +189,13 @@ module.exports = {
 
         } catch (error) {
             res.status(400).json({ error: "Error on reset password, try again"})
+        }
+    },
+    async privacyPolicy(req, res) {
+        try {
+            res.sendFile(path.join(__dirname + '../../../files/ttr_privacy_policy_ptbr.html'))
+        } catch (error) {
+          return res.status(400).json({error: "Error on privacy policy, try again"})  
         }
     }
 }
