@@ -9,6 +9,7 @@ module.exports = {
         return res.status(200).json({message: "Verifing token"})
     },
     async deleteUser(req, res) {
+        //req.userID from the middleware
         const user = await User.findByIdAndRemove(req.userId)
 
         return res.status(200).json({ message: "User deleted"})
@@ -29,7 +30,7 @@ module.exports = {
             const { date } = req.body
 
             const currentDate = new Date(date)
-            console.log(currentDate)
+            console.log(currentDate, currentDate.getUTCDay())
             
             //FAZER UM GRÁFICO LAST WEEK, QUE CONTÉM TODAS AS ESTATÍSTICAS DA SEMANA PASSADA
             let lastDateUseApp = clone(user.lastDateUseApp)
@@ -61,8 +62,8 @@ module.exports = {
             }
             
             //user.resetCharts avoid a double resetChart
-            if (currentDate.getDay() == 1 && !user.resetCharts) {//It's monday and chart has not yet been reset?
-                console.log('reset monday')
+            if (currentDate.getUTCDay() == 1 && !user.resetCharts) {//It's monday and chart has not yet been reset?
+                console.log('reset monday', currentDate.getDay())
 
                 // if don't use !user.resetCharts the chart will reset all day on monday
                 user.lastWeekPerformance = clone(user.performance) //JS is POO
@@ -87,19 +88,19 @@ module.exports = {
 
             }
 
-            if (currentDate.getDay() > 1 && currentDate.getDay() != 0 && !user.resetCharts) {//conditional in case the user has not accessed the app on Monday and the graph has not been reset (the bug)
+            if (currentDate.getUTCDay() > 1 && currentDate.getUTCDay() != 0 && !user.resetCharts) {//conditional in case the user has not accessed the app on Monday and the graph has not been reset (the bug)
                 // currentDate.getDay() != 0 because the seven days condition resolve for this case
                 //get the monday of the week
 
 
                 let current = new Date(date)
-                let day = current.getDay()
-                let diff = current.getDate() - day + (day == 0 ? -6:1); // adjust when day is sunday
-                let mondayOfTheWeek = new Date(current.setDate(diff))
+                let day = current.getUTCDay()
+                let diff = current.getUTCDate() - day + (day == 0 ? -6:1); // adjust when day is sunday
+                let mondayOfTheWeek = new Date(current.setUTCDate(diff))
                 let resetChartsMondayDate = new Date(user.resetChartsMondayDate)
                 //get the monday of the week
 
-                if (mondayOfTheWeek.getDate() != resetChartsMondayDate.getDate()) {
+                if (mondayOfTheWeek.getUTCDate() != resetChartsMondayDate.getUTCDate()) {
                     console.log('reset dont used monday')
                     user.lastWeekPerformance = clone(user.performance) //JS is POO
                     user.markModified('lastWeekPerformance')
@@ -125,7 +126,7 @@ module.exports = {
 
             }
              
-            if (currentDate.getDay() != 1 && user.resetCharts) { //Allows the chart to be restarted next week, when is reset on monday
+            if (currentDate.getUTCDay() != 1 && user.resetCharts) { //Allows the chart to be restarted next week, when is reset on monday
                 console.log('always chart')
                 user.resetCharts = false
                 user.markModified('resetCharts')
@@ -265,7 +266,7 @@ module.exports = {
                 review.dateNextSequenceReview = new Date(currentDate.getFullYear(), currentDate.getMonth(), nextDate)//review.dateNextSequenceReview.setDate(nextDate) doesn't worked for some reason
                 review.dateNextSequenceReview.setUTCHours(5,0,0,0)
 
-                ++user.performance[currentDate.getDay()].reviews//Increment the reviews count on the day
+                ++user.performance[currentDate.getUTCDay()].reviews//Increment the reviews count on the day
 
                 user.markModified('performance')
                 user.save()
@@ -282,7 +283,7 @@ module.exports = {
                 review.dateNextSequenceReview = new Date(currentDate.getFullYear(), currentDate.getMonth(), nextDate)//review.dateNextSequenceReview.setDate(nextDate) doesn't worked for some reason
                 review.dateNextSequenceReview.setUTCHours(5,0,0,0)
 
-                ++user.performance[currentDate.getDay()].reviews
+                ++user.performance[currentDate.getUTCDay()].reviews
 
                 user.markModified('performance')
                 user.save()

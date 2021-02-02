@@ -66,7 +66,6 @@ module.exports = {
             }
 
             if (user.disable) {
-                console.log('asd')
                 return res.status(406).json({ error: "User disable"})
             }
             

@@ -43,7 +43,7 @@ const ReviewSchema = mongoose.Schema({
         type: Object
     },
     image: {
-        type: String
+        type: Array
     }
 })
 
