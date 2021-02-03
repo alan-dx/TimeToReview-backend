@@ -142,18 +142,18 @@ module.exports = {
             //     return res.status(400).json({ error: 'Cannot send forgot password email'})
             // })
 
-            request
-                .then((result) => {
-                    console.log(result.body)
-                })
-                .catch((err) => {
-                    console.log(err.statusCode)
-                })
+            // request
+            //     .then((result) => {
+            //         console.log(result.body)
+            //     })
+            //     .catch((err) => {
+            //         console.log(err.statusCode)
+            //     })
 
 
             return res.status(200).json({ message: 'Email successfully sent'})
         } catch (error) {
-            console.log(error)
+            
             res.status(400).json({ error: 'Error on forgot password, try again'})
         }
     },

@@ -50,7 +50,6 @@ const ReviewSchema = mongoose.Schema({
 
     //ATENÇÃO => AO CRIAR A REVISÃO PELA PRIMEIRA VEZ, A DATA DA PRIMEIRA REVISÃO TEM QUE SER INSERIDA PELO FRONTEND
 
-
 const Review = mongoose.model('Review', ReviewSchema)
 
 module.exports = Review;

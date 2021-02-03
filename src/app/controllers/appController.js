@@ -30,7 +30,7 @@ module.exports = {
             const { date } = req.body
 
             const currentDate = new Date(date)
-            console.log(currentDate, currentDate.getUTCDay())
+            
             
             //FAZER UM GRÁFICO LAST WEEK, QUE CONTÉM TODAS AS ESTATÍSTICAS DA SEMANA PASSADA
             let lastDateUseApp = clone(user.lastDateUseApp)
@@ -40,9 +40,17 @@ module.exports = {
             const diffLastCurrentDate = new Date(currentDate - lastDateUseApp)
 
             if (diffLastCurrentDate.getUTCDate() > 7) {//If the user doesn't use the app in 7 days, occurs before monday conditional
-                console.log('reset seven days')
+                // console.log('reset seven days')
                 user.lastWeekPerformance = clone(user.performance) //JS is POO
                 user.markModified('lastWeekPerformance')
+
+                //get the monday of the week
+
+                let current = new Date(date)
+                let day = current.getUTCDay()
+                let diff = current.getUTCDate() - day + (day == 0 ? -6:1); // adjust when day is sunday
+                let mondayOfTheWeek = new Date(current.setUTCDate(diff))
+                //get the monday of the week
 
                 user.performance.forEach(item => {
                     item.reviews = 0
@@ -59,11 +67,13 @@ module.exports = {
 
                 user.resetCharts = true
                 user.markModified('resetCharts')
+                user.resetChartsMondayDate = mondayOfTheWeek
+
             }
             
             //user.resetCharts avoid a double resetChart
             if (currentDate.getUTCDay() == 1 && !user.resetCharts) {//It's monday and chart has not yet been reset?
-                console.log('reset monday', currentDate.getDay())
+                // console.log('reset monday', currentDate.getDay())
 
                 // if don't use !user.resetCharts the chart will reset all day on monday
                 user.lastWeekPerformance = clone(user.performance) //JS is POO
@@ -101,7 +111,7 @@ module.exports = {
                 //get the monday of the week
 
                 if (mondayOfTheWeek.getUTCDate() != resetChartsMondayDate.getUTCDate()) {
-                    console.log('reset dont used monday')
+                    // console.log('reset dont used monday')
                     user.lastWeekPerformance = clone(user.performance) //JS is POO
                     user.markModified('lastWeekPerformance')
     
@@ -127,7 +137,7 @@ module.exports = {
             }
              
             if (currentDate.getUTCDay() != 1 && user.resetCharts) { //Allows the chart to be restarted next week, when is reset on monday
-                console.log('always chart')
+                // console.log('always chart')
                 user.resetCharts = false
                 user.markModified('resetCharts')
             }
@@ -138,7 +148,7 @@ module.exports = {
 
             return res.status(200).json(user)
         } catch (error) {
-            console.log(error)
+            // console.log(error)
             return res.status(500).json({error: `Error on list user, ${error}`})
         }
 
@@ -250,12 +260,12 @@ module.exports = {
             if (review.currentSequenceReview > (review.routine_id.sequence.length - 1)) {//In case the user selects a shorter sequence
                 //here not use >= because else case below resolve it
                 //OLHAR SE OCORRER ALGUM BUG => POSSÍVEL CAUSA
-                console.log('special case')
+                
                 review.currentSequenceReview = review.routine_id.sequence.length - 1
             }
 
             if (review.currentSequenceReview < review.routine_id.sequence.length - 1) {
-                console.log('if')
+                
                 
                 const currentDate = new Date(req.query.date)
                 currentDate.setUTCHours(5,0,0,0)
@@ -274,7 +284,7 @@ module.exports = {
                 
                 return res.status(200).json(review)
             } else { //When the currentSequenceReview is on the last sequence of the array
-                console.log('else')
+                
 
                 const currentDate = new Date(req.query.date)
                 currentDate.setUTCHours(5,0,0,0)
@@ -306,7 +316,7 @@ module.exports = {
             }
 
             if (req.body.routine_id) {
-                console.log('rotina')
+                
                 const routine = await Routine.findById(req.body.routine_id)
                 const oldRoutine = await Routine.findById(review.routine_id)
 
@@ -351,17 +361,17 @@ module.exports = {
 
             if (req.body.track) {
                 review.track = req.body.track
-                console.log('track')
+                
             }
 
             if (req.body.notes) {
                 review.notes = req.body.notes
-                console.log('notes')
+                
             }
 
             if (req.body.image) {
                 review.image = req.body.image
-                console.log('image')
+                
             }
 
             review.save()
@@ -427,7 +437,7 @@ module.exports = {
         const user = await User.findById(req.userId)
         const subject = await Subject.findById(req.query.id)
         try {
-            console.log(subject.user == req.userId, subject.associatedReviews.length)
+            
             if ((subject.user == req.userId) && (subject.associatedReviews.length == 0)) {
                 subject.deleteOne()
 
@@ -535,7 +545,7 @@ module.exports = {
         const user = await User.findById(req.userId).select(['-reviews', '-subjects', '-routines', '-performance'])
         try {
             const {date} = req.body
-            console.log(date)
+            
             user.reminderTime = date
 
             user.save()
@@ -548,7 +558,7 @@ module.exports = {
     async resetCharts(req,res) {
         const user = await User.findById(req.userId)
         try {
-            console.log('Reseted Charts')
+            
 
             user.performance.map(item => {
                 item.reviews = 0
@@ -567,7 +577,7 @@ module.exports = {
             return res.status(200).json(user.performance)
             
         } catch (error) {
-            console.log(error)
+            
             return res.status(500).json({message: `Error on resetCharts, ${error}`})
         }
     },
