@@ -25,6 +25,6 @@ app.use((error,req,res,next) => {
 })
 
 //SE HOUVER ALGUM ERRO EM PRODUÇÃO, VERIFICA SE NÃO PRECISA IMPORTAR O DOTENV AQ
-app.listen(process.env.PORT, () => {
+app.listen(process.env.PORT || 3333, () => {
     console.log(`Server running`)
 })
