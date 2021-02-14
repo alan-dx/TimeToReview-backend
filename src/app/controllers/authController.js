@@ -112,7 +112,7 @@ module.exports = {
                     "To": [
                         {
                         "Email": email,
-                        "Name": "Alan"
+                        "Name": user.name
                         }
                     ],
                     "Subject": "TimeToReview - Recuperação de Senha",
@@ -131,25 +131,6 @@ module.exports = {
             user.passwordResetExpires = now
 
             user.save()
-
-            // mailer.sendMail({
-            //     to: email,
-            //     from: 'alanalmeida.emp@gmail.com',
-            //     template: 'auth/forgot_password',
-            //     context: { token }
-            // }, (err) => {
-            //     if (err)
-            //     return res.status(400).json({ error: 'Cannot send forgot password email'})
-            // })
-
-            // request
-            //     .then((result) => {
-            //         console.log(result.body)
-            //     })
-            //     .catch((err) => {
-            //         console.log(err.statusCode)
-            //     })
-
 
             return res.status(200).json({ message: 'Email successfully sent'})
         } catch (error) {

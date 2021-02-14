@@ -29,5 +29,7 @@ routes
     .post('/changeUserName', appController.changeUserName)
     .post('/verifyPassword', appController.verifyPassword)
     .post('/changePassword', appController.changePassword)
+    .get('/sendMailConfirm', appController.sendMailConfirm)
+    .post('/mailConfirm', appController.mailConfirm)
 
 module.exports = routes;

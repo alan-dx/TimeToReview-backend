@@ -2,6 +2,9 @@ const Review = require("../models/review");
 const Routine = require("../models/routine");
 const Subject = require("../models/subject");
 const User = require("../models/user");
+const crypto = require('crypto')
+const mailer = require('../../modules/mailer')
+const path = require('path')
 
 module.exports = {
 
@@ -634,6 +637,81 @@ module.exports = {
         } catch (error) {
             return res.status(500).json({error: `Error on changePassword, ${error}`})
         }
+    },
+    async sendMailConfirm(req, res) {
+        try {
+            const user = await User.findById(req.userId).select('+email')
+
+            if (!user) {
+                return res.status(404).json({error: 'User not found'})
+            }
+
+            const token = crypto.randomBytes(20).toString('hex')//generate mail token
+
+            mailer
+            .post("send", {'version': 'v3.1'})
+            .request({
+            "Messages":[
+                {
+                "From": {
+                    "Email": "contato.almeidadev@gmail.com",
+                    "Name": "TimeToReview"
+                },
+                "To": [
+                    {
+                    "Email": user.email,
+                    "Name": user.name
+                    }
+                ],
+                "Subject": "TimeToReview - Confirmação de conta",
+                "TextPart": "",
+                "HTMLPart": `<h2>Vamos confirmar sua conta.</h2><h3>Copie e cole o token abaixo no campo indicado do aplicativo</h3><br />TOKEN: <strong>${token}</strong>`
+                +`<br /><h3>O Token possui validade de duas horas!</h3>`,
+                "CustomID": "TTRConfirmMail"
+                }
+            ]
+            })
+
+            const now = new Date()
+            now.setHours(now.getHours() + 1)
+
+            user.mailConfirmToken = token
+            user.mailResetExpires = now
+            
+            user.save()
+
+            return res.status(200).json({ message: 'Email successfully sent'})
+        } catch (error) {
+            res.status(400).json({ error: 'Error on confirm mail, try again'})
+        }
+    },
+    async mailConfirm(req,res) {
+        const {token} = req.body
+
+        try {
+            const user = User.findById(req.userId)
+            .select('+mailConfirmToken mailResetExpires')
+
+            if (user.mailConfirmToken != token) {
+                return res.status(409).json({ error: 'Token invalid'})
+            }
+
+            const now = new Date()
+
+            if (now > user.mailResetExpires) {
+                return res.status(401).json({ error: 'Token expired, generate a new one'})
+            }
+
+            user.verifiedAccount = true
+
+            user.save()
+
+            res.status(200).json({ message: "Verified Account"})
+
+        } catch (error) {
+            res.status(400).json({ error: "Error on mail Confirm, try again"})
+        }
+
     }
 }
 

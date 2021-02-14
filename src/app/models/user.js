@@ -24,6 +24,10 @@ const UserSchema = new mongoose.Schema({//like table on SQL. This is the Model
         type: Date,
         default: Date.now
     },
+    verifiedAccount: {
+        type: Boolean,
+        default: false
+    },
     reminderTime: {
         type: Date,
         default: new Date("1899-12-31T13:01:00.000Z")
@@ -209,6 +213,15 @@ const UserSchema = new mongoose.Schema({//like table on SQL. This is the Model
         select: false
     },
     passwordResetExpires: {
+        type: Date,
+        select: false,
+        default: Date.now
+    },
+    mailConfirmToken: {
+        type: String,
+        select: false
+    },
+    mailResetExpires: {
         type: Date,
         select: false,
         default: Date.now
