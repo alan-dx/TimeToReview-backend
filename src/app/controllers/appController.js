@@ -648,7 +648,7 @@ module.exports = {
 
             const token = crypto.randomBytes(20).toString('hex')//generate mail token
 
-            mailer
+            const request = mailer
             .post("send", {'version': 'v3.1'})
             .request({
             "Messages":[

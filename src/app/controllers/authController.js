@@ -106,7 +106,7 @@ module.exports = {
                 "Messages":[
                     {
                     "From": {
-                        "Email": "alan.almeida998@gmail.com",
+                        "Email": "contato.almeidadev@gmail.com",
                         "Name": "TimeToReview"
                     },
                     "To": [
