@@ -19,6 +19,7 @@ module.exports = {
     },
     async listUser(req,res) {
         try {
+            console.log('ola')
 
             var clone = require('clone');
             const user = await User.findById(req.userId).populate(['subjects', 'routines',{
@@ -689,7 +690,7 @@ module.exports = {
         const {token} = req.body
 
         try {
-            const user = User.findById(req.userId)
+            const user = await User.findById(req.userId)
             .select('+mailConfirmToken mailResetExpires')
 
             if (user.mailConfirmToken != token) {
@@ -709,6 +710,7 @@ module.exports = {
             res.status(200).json({ message: "Verified Account"})
 
         } catch (error) {
+            console.log(error)
             res.status(400).json({ error: "Error on mail Confirm, try again"})
         }
 
