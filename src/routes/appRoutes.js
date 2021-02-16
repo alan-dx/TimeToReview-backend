@@ -31,5 +31,6 @@ routes
     .post('/changePassword', appController.changePassword)
     .get('/sendMailConfirm', appController.sendMailConfirm)
     .post('/mailConfirm', appController.mailConfirm)
+    .post('/setPremiumStatus', appController.setPremiumStatus)
 
 module.exports = routes;

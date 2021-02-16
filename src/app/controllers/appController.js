@@ -714,6 +714,23 @@ module.exports = {
             res.status(400).json({ error: "Error on mail Confirm, try again"})
         }
 
+    },
+    async setPremiumStatus(req,res) {
+
+        const {deviceId} = req.body
+
+        try {
+            const user = await User.findById(req.userId)
+            
+            user.premium = true
+
+            user.save()
+
+            res.status(200).json({ message: "Premium Account"})
+            
+        } catch (error) {
+            res.status(400).json({ error: "Error on setPremiumStatus, try again"})
+        }
     }
 }
 
