@@ -233,6 +233,9 @@ const UserSchema = new mongoose.Schema({//like table on SQL. This is the Model
         type: Boolean,
         default: false
     },
+    deviceId: {
+        type: String
+    },
     disable: {
         type: Boolean,
         default: false

@@ -19,8 +19,7 @@ module.exports = {
     },
     async listUser(req,res) {
         try {
-            console.log('ola')
-
+            
             var clone = require('clone');
             const user = await User.findById(req.userId).populate(['subjects', 'routines',{
                 //deep populate
@@ -31,7 +30,7 @@ module.exports = {
                 ]
             }]).select("+email")
 
-            const { date } = req.body
+            const { date, deviceId } = req.body
 
             const currentDate = new Date(date)
             
@@ -147,6 +146,7 @@ module.exports = {
             }
 
             user.change = false
+            user.deviceId = deviceId
 
             user.save()
 
